@@ -326,7 +326,10 @@ void sigchld_handler(int sig)
  */
 void sigint_handler(int sig)
 {
-    // petit test git
+    int pid = 0;
+    if((pid = fgpid(jobs) != 0) {
+        kill(pid,SIGINT);
+    }
     return;
 }
 
@@ -337,6 +340,10 @@ void sigint_handler(int sig)
  */
 void sigtstp_handler(int sig)
 {
+    int pid = 0;
+    if((pid = fgpid(jobs) != 0) {
+        kill(pid,SIGTSTP);
+    }
     return;
 }
 
