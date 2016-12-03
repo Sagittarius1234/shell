@@ -186,11 +186,11 @@ void eval(char *cmdline)
                 exit(0);
             }
         }
+        if (!addjob(jobs,pid,bg?BG:FG,cmdline))
+            unix_error("Too many jobs.");
         if (!bg) {
             waitfg(pid);
         } else {
-            if (!addjob(jobs,pid,BG,cmdline))
-                unix_error("Too many jobs.");
             printf("[%d] (%d) %s",pid2jid(pid),pid,cmdline);
         }
     }
