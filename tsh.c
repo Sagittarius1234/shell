@@ -292,7 +292,6 @@ void do_bgfg(char **argv)
  */
 void waitfg(pid_t pid)
 {
-    fprintf(stderr,"Waitfg %d\n",pid);
     int status;
     if (waitpid(pid,&status,0)<0)
         unix_error("waitfg: waitpid error");
@@ -314,7 +313,7 @@ void sigchld_handler(int sig)
 {
     int status;
     pid_t pid;
-    while ((pid = waitpid(-1,&status,WNOHANG)) >= 0)
+    while ((pid = waitpid(-1,&status,WNOHANG)) > 0)
         deletejob(jobs,pid);
     return;
 }
@@ -327,7 +326,7 @@ void sigchld_handler(int sig)
 void sigint_handler(int sig)
 {
     int pid = 0;
-    if((pid = fgpid(jobs) != 0) {
+    if((pid = fgpid(jobs)) != 0) {
         kill(pid,SIGINT);
     }
     return;
@@ -341,7 +340,7 @@ void sigint_handler(int sig)
 void sigtstp_handler(int sig)
 {
     int pid = 0;
-    if((pid = fgpid(jobs) != 0) {
+    if((pid = fgpid(jobs)) != 0) {
         kill(pid,SIGTSTP);
     }
     return;
@@ -479,7 +478,6 @@ int pid2jid(pid_t pid)
 void listjobs(struct job_t *jobs)
 {
     int i;
-
     for (i = 0; i < MAXJOBS; i++) {
         if (jobs[i].pid != 0) {
             printf("[%d] (%d) ", jobs[i].jid, jobs[i].pid);
@@ -500,6 +498,7 @@ void listjobs(struct job_t *jobs)
             printf("%s", jobs[i].cmdline);
         }
     }
+
 }
 /******************************
  * end job list helper routines
