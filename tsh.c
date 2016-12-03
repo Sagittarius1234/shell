@@ -261,12 +261,10 @@ int parseline(const char *cmdline, char **argv)
 int builtin_cmd(char **argv)
 {
     if (!strcmp(argv[0],"bg")) {
-        // TODO
-        exit(1);
+        do_bgfg(argv);
         return 1;
     } else if (!strcmp(argv[0],"fg")) {
-        // TODO
-        exit(1);
+        do_bgfg(argv);
         return 1;
     } else if (!strcmp(argv[0],"quit")) {
         exit(0);
@@ -284,7 +282,16 @@ int builtin_cmd(char **argv)
  */
 void do_bgfg(char **argv)
 {
-    return;
+    int jid;
+    struct job_t *job;
+    sscanf(argv[1],"%d",&jid);
+    job=getjobjid(jobs,jid);
+    kill(job->pid,SIGCONT);
+    job->state=BG;
+    if (!strcmp(argv[0],"fg")) {
+        job->state=FG;
+        waitfg(job->pid);
+    }
 }
 
 /*
@@ -293,8 +300,10 @@ void do_bgfg(char **argv)
 void waitfg(pid_t pid)
 {
     int status;
-    if (waitpid(pid,&status,0)<0)
+    if (waitpid(pid,&status,WUNTRACED)<0)
         unix_error("waitfg: waitpid error");
+    if (!WIFSTOPPED(status))
+        deletejob(jobs,pid);
     return;
 }
 
@@ -326,8 +335,13 @@ void sigchld_handler(int sig)
 void sigint_handler(int sig)
 {
     int pid = 0;
+    struct job_t *job;
+    int jid = 0;
     if((pid = fgpid(jobs)) != 0) {
+        job = getjobpid(jobs,pid);
+        jid = job->jid;
         kill(pid,SIGINT);
+        printf("Job [%d] (%d) terminated by signal %d\n",jid,pid,SIGINT);
     }
     return;
 }
@@ -340,8 +354,11 @@ void sigint_handler(int sig)
 void sigtstp_handler(int sig)
 {
     int pid = 0;
+    struct job_t *job;
     if((pid = fgpid(jobs)) != 0) {
         kill(pid,SIGTSTP);
+        job = getjobpid(jobs,pid);
+        job->state = ST;
     }
     return;
 }
