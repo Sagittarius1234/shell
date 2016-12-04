@@ -282,10 +282,23 @@ int builtin_cmd(char **argv)
  */
 void do_bgfg(char **argv)
 {
-    int jid;
+    int id;
     struct job_t *job;
-    sscanf(argv[1],"%d",&jid);
-    job=getjobjid(jobs,jid);
+    if (argv[1]==NULL) {
+        printf("%s command requires a PID or %%jobid\n",argv[0]);
+        return;
+    }
+    if (argv[1][0]=='%') {
+        sscanf(&argv[1][1],"%d",&id);
+        job=getjobjid(jobs,id);
+    } else {
+        sscanf(&argv[1][0],"%d",&id);
+        job=getjobpid(jobs,id);
+    }
+    if (job == NULL) {
+        printf("%s: No such job\n",argv[1]);
+        return;
+    }
     kill(job->pid,SIGCONT);
     job->state=BG;
     if (!strcmp(argv[0],"fg")) {
