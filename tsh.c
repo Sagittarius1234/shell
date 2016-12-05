@@ -194,17 +194,27 @@ void eval(char *cmdline)
             printf("Error in sigprocmask while blocking: returning to prompt\n");
             return;
         }
-        if ((pid = Fork()) == 0) { // Child process
+
+        /* Child Process */
+        if ((pid = Fork()) == 0) { 
             // Child must unblock SIGCHLD signals before execve
             if(sigprocmask(SIG_UNBLOCK, &x, NULL) == -1) {
                 printf("Error in sigprocmask while unblocking: returning to prompt\n");
-            return;
+                return;
             }
+            // Ensure that only the shell is in the foreground process group
+            if(setpgid(0,0) == -1) {
+                printf("Error while putting child in a new process group: returning to prompt\n");
+                return;
+            }
+            // Execute Child process
             if (execve(argv[0], argv, environ) < 0) {
                 printf("%s: Command not found.\n",argv[0]);
                 exit(0);
             }
         }
+
+        // Add child to the list
         if (!addjob(jobs,pid,bg?BG:FG,cmdline))
             unix_error("Too many jobs.");
         // Parent must unblock SIGCHLD signals after adding child to jobs
