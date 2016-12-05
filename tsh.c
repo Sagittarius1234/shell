@@ -353,7 +353,7 @@ void sigint_handler(int sig)
     if((pid = fgpid(jobs)) != 0) {
         job = getjobpid(jobs,pid);
         jid = job->jid;
-        kill(pid,SIGINT);
+        kill(-pid,SIGINT);
         printf("Job [%d] (%d) terminated by signal %d\n",jid,pid,SIGINT);
     }
     return;
@@ -369,7 +369,7 @@ void sigtstp_handler(int sig)
     int pid = 0;
     struct job_t *job;
     if((pid = fgpid(jobs)) != 0) {
-        kill(pid,SIGTSTP);
+        kill(-pid,SIGTSTP);
         job = getjobpid(jobs,pid);
         job->state = ST;
     }
