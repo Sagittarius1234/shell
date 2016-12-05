@@ -172,15 +172,34 @@ void eval(char *cmdline)
     char *argv[MAXARGS];
     char buf[MAXLINE];
     int bg;
+    sigset_t x;
     pid_t pid = 0;
 
     strcpy(buf,cmdline);
     bg = parseline(buf, argv);
     if (argv[0]==NULL)
-        return; // ignore empty lines lulz
+        return; // ignore empty lines 
 
     if (!builtin_cmd(argv)) {
+        // Block SIGCHLD signals while creating child
+        if(sigemptyset(&x) == -1) {
+            printf("Error in sigemptyset: returning to prompt\n"); 
+            return;
+        }
+        if(sigaddset(&x, SIGCHLD) == -1) {
+            printf("Error in sigaddset: returning to prompt\n");
+            return;
+        }
+        if(sigprocmask(SIG_BLOCK, &x, NULL) == -1) {
+            printf("Error in sigprocmask while blocking: returning to prompt\n");
+            return;
+        }
         if ((pid = Fork()) == 0) { // Child process
+            // Child must unblock SIGCHLD signals before execve
+            if(sigprocmask(SIG_UNBLOCK, &x, NULL) == -1) {
+                printf("Error in sigprocmask while unblocking: returning to prompt\n");
+            return;
+            }
             if (execve(argv[0], argv, environ) < 0) {
                 printf("%s: Command not found.\n",argv[0]);
                 exit(0);
@@ -188,6 +207,11 @@ void eval(char *cmdline)
         }
         if (!addjob(jobs,pid,bg?BG:FG,cmdline))
             unix_error("Too many jobs.");
+        // Parent must unblock SIGCHLD signals after adding child to jobs
+        if(sigprocmask(SIG_UNBLOCK, &x, NULL) == -1) {
+            printf("Error in sigprocmask while unblocking: returning to prompt\n");
+            return;
+        }
         if (!bg) {
             waitfg(pid);
         } else {
