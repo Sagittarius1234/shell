@@ -13,6 +13,7 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <errno.h>
+#include <stdarg.h>
 
 /* Misc manifest constants */
 #define MAXLINE    1024   /* max line size */
@@ -67,6 +68,7 @@ void sigint_handler(int sig);
 
 /* Aux functions */
 pid_t Fork();
+void safe_printf(const char* format, ...);
 
 /* Here are helper routines that we've provided for you */
 int parseline(const char *cmdline, char **argv);
@@ -665,3 +667,12 @@ pid_t Fork() {
     return pid;
 }
 
+void safe_printf(const char* format, ...) {
+    char buf[1024];
+    va_list args;
+
+    va_start(args,format);
+    vsnprintf(buf, sizeof(buf), format, args);
+    va_end(args);
+    write(1,buf,strlen(buf));
+}
