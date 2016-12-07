@@ -322,13 +322,13 @@ void do_bgfg(char **argv)
     int id;
     struct job_t *job;
     if (argv[1]==NULL) {
-        printf("%s command requires a PID or %%jobid\n",argv[0]);
+        printf("%s command requires PID or %%jobid\n argument",argv[0]);
         return;
     }
     if (argv[1][0]=='%') {
         sscanf(&argv[1][1],"%d",&id);
         if (id <= 0) {
-            printf("%s: argument must be a PID or %%jobid\n",argv[0]);
+            printf("%s: argument must be PID or %%jobid argument\n",argv[0]);
             return;
         }
         job=getjobjid(jobs,id);
