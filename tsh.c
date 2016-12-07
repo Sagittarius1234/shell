@@ -322,7 +322,7 @@ void do_bgfg(char **argv)
     int id;
     struct job_t *job;
     if (argv[1]==NULL) {
-        printf("%s command requires PID or %%jobid\n argument",argv[0]);
+        printf("%s command requires PID or %%jobid argument",argv[0]);
         return;
     }
     if (argv[1][0]=='%') {
