@@ -322,7 +322,7 @@ void do_bgfg(char **argv)
     int id;
     struct job_t *job;
     if (argv[1]==NULL) {
-        printf("%s command requires PID or %%jobid argument",argv[0]);
+        printf("%s command requires PID or %%jobid argument\n",argv[0]);
         return;
     }
     if (argv[1][0]=='%') {
@@ -353,6 +353,8 @@ void do_bgfg(char **argv)
     if (!strcmp(argv[0],"fg")) {
         job->state=FG;
         waitfg(job->pid);
+    } else {
+        printf("[%d] (%d) %s", job->jid, jobs->pid, jobs->cmdline);
     }
 }
 
