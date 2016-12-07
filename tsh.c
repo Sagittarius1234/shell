@@ -333,7 +333,7 @@ void do_bgfg(char **argv)
         printf("%s: No such job\n",argv[1]);
         return;
     }
-    kill(job->pid,SIGCONT);
+    kill(-(job->pid),SIGCONT);
     job->state=BG;
     if (!strcmp(argv[0],"fg")) {
         job->state=FG;
