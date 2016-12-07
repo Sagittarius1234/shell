@@ -226,6 +226,7 @@ void eval(char *cmdline)
             waitfg(pid);
         } else {
             printf("[%d] (%d) %s",pid2jid(pid),pid,cmdline);
+            fflush(stdout);
         }
     }
 
@@ -324,14 +325,26 @@ void do_bgfg(char **argv)
     }
     if (argv[1][0]=='%') {
         sscanf(&argv[1][1],"%d",&id);
+        if (id <= 0) {
+            printf("%s: argument must be a PID or %%jobid\n",argv[0]);
+            return;
+        }
         job=getjobjid(jobs,id);
+        if (job == NULL) {
+            printf("%s: No such job\n",argv[1]);
+            return;
+        }
     } else {
         sscanf(&argv[1][0],"%d",&id);
+        if (id <= 0) {
+            printf("%s: argument must be a PID or %%jobid\n",argv[0]);
+            return;
+        }
         job=getjobpid(jobs,id);
-    }
-    if (job == NULL) {
-        printf("%s: No such job\n",argv[1]);
-        return;
+        if (job == NULL) {
+            printf("(%s): No such process\n",argv[1]);
+            return;
+        }
     }
     kill(-(job->pid),SIGCONT);
     job->state=BG;
@@ -406,6 +419,7 @@ void sigtstp_handler(int sig)
         kill(-pid,SIGTSTP);
         job = getjobpid(jobs,pid);
         job->state = ST;
+        printf("Job [%d] (%d) stopped by signal %d\n",job->jid,pid,SIGTSTP);
     }
     return;
 }
