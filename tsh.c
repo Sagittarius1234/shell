@@ -360,8 +360,7 @@ void do_bgfg(char **argv)
 void waitfg(pid_t pid)
 {
     int status;
-    if (waitpid(pid,&status,WUNTRACED)<0)
-        unix_error("waitfg: waitpid error");
+    waitpid(pid,&status,WUNTRACED);
     if (!WIFSTOPPED(status))
         deletejob(jobs,pid);
     return;
@@ -382,8 +381,24 @@ void sigchld_handler(int sig)
 {
     int status;
     pid_t pid;
-    while ((pid = waitpid(-1,&status,WNOHANG)) > 0)
-        deletejob(jobs,pid);
+    struct job_t *job;
+    write(1,"chld\n",5);
+    while ((pid = waitpid(-1,&status,WUNTRACED|WCONTINUED)) > 0) {
+        job=getjobpid(jobs,pid);
+        if (job == NULL) return;
+        if (WIFSIGNALED(status)) {
+            printf("Job [%d] (%d) terminated by signal %d\n",job->jid,pid,WTERMSIG(status));
+            deletejob(jobs,pid);
+        } else if (WIFSTOPPED(status)) {
+            printf("Job [%d] (%d) stopped by signal %d\n",job->jid,pid,WSTOPSIG(status));
+            job->state = ST;
+        } else if (WIFCONTINUED(status)) {
+            printf("Job [%d] (%d) continued by signal %d\n",job->jid,pid,SIGCONT);
+            job->state = BG;
+        } else if (WIFEXITED(status)) {
+            deletejob(jobs,pid);
+        }
+    }
     return;
 }
 
