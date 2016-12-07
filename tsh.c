@@ -362,8 +362,7 @@ void do_bgfg(char **argv)
 void waitfg(pid_t pid)
 {
     int status;
-    if (waitpid(pid,&status,WUNTRACED)<0)
-        unix_error("waitfg: waitpid error");
+    waitpid(pid,&status,WUNTRACED);
     if (!WIFSTOPPED(status))
         deletejob(jobs,pid);
     return;
